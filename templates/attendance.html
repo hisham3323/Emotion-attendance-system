@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Recognition Attendance</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;margin:0;text-align:center}
+    h1{margin-top:20px;color:#004d40;font-size:40px}
+    #video-container{display:flex;justify-content:center;margin-top:20px}
+    #video-stream{border:6px solid #00796b;border-radius:12px}
+    .btn{background:#00796b;color:#fff;border:none;border-radius:6px;
+         padding:12px 28px;font-size:17px;cursor:pointer;margin-top:14px}
+    .btn:hover{background:#004d40}
+    #status{margin-top:18px;font-size:18px;color:#333;min-height:24px}
+    #register-form{margin-top:30px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    input{padding:10px;border:1px solid #ccc;border-radius:6px;font-size:16px;width:220px}
+  </style>
+</head>
+<body>
+  <h1>Face Recognition Attendance</h1>
+
+  <!-- Live video -->
+  <div id="video-container">
+    <img id="video-stream" src="{{ url_for('video_feed') }}" width="720" height="540">
+  </div>
+
+  <!-- Save button -->
+  <button class="btn" onclick="stopAttendance()">Stop &amp; Save Attendance</button>
+
+  <!-- Registration -->
+  <div id="register-form">
+    <h2>Register New User</h2>
+    <input type="text"    id="name"  placeholder="Name">
+    <input type="number"  id="age"   placeholder="Age">
+    <input type="email"   id="email" placeholder="Email">
+    <button class="btn" onclick="registerUser()">Register</button>
+  </div>
+
+  <!-- Status output -->
+  <div id="status"></div>
+
+  <script>
+    function stopAttendance(){
+      fetch('/stop_attendance',{method:'POST'})
+      .then(r=>r.json()).then(d=>{
+        document.getElementById('status').innerText =
+          d.message ? d.message : 'Error: '+d.error;
+      }).catch(()=>{document.getElementById('status').innerText='Request failed';});
+    }
+
+    function registerUser(){
+      const name  = document.getElementById('name').value.trim();
+      const age   = document.getElementById('age').value.trim();
+      const email = document.getElementById('email').value.trim();
+      if(!(name&&age&&email)){
+        document.getElementById('status').innerText='Fill all fields.';
+        return;
+      }
+      const fd=new FormData();
+      fd.append('name',name); fd.append('age',age); fd.append('email',email);
+      fetch('/register_user',{method:'POST',body:fd})
+      .then(r=>r.json()).then(d=>{
+        document.getElementById('status').innerText =
+          d.message ? d.message : 'Error: '+d.error;
+      }).catch(()=>{document.getElementById('status').innerText='Registration failed';});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Emotion Detection</h1>
+            <p class="subtitle">Real-time facial emotion analysis</p>
+        </header>
+
+        <main>
+            <div class="video-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                <div id="error-message" class="error-message" style="display: none;">
+                    Unable to access webcam. Please ensure you have granted camera permissions.
+                </div>
+            </div>
+
+            <div class="result-container">
+                <div id="emotion-badge" class="emotion-badge">
+                    <span id="emotion-text">Waiting...</span>
+                </div>
+                <div id="confidence" class="confidence">
+                    Confidence: <span id="confidence-value">0%</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="snapshot-btn" class="btn">
+                    <span class="icon">📸</span>
+                    Take Snapshot
+                </button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by Deep Learning</p>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

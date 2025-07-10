@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Assistant Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>AI Assistant Dashboard</h1>
+    <p>Select a system to use:</p>
+    
+    <div class="button-container">
+      <a href="/emotion" class="btn">Emotion Detection</a>
+      <a href="/attendance" class="btn">Attendance System</a>
+    </div>
+  </div>
+</body>
+</html>
