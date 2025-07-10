@@ -1,0 +1,11 @@
+# Ignore all CSV logs
+*.csv
+
+# Ignore database files (optional if they contain sensitive data)
+*.db
+
+# Ignore model weights if file is too large (GitHub has a 100MB file limit)
+*.h5
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
