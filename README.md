@@ -12,7 +12,7 @@ This project is an AI-powered attendance system that uses real-time **facial emo
 - 📸 Real-time webcam capture
 - 📊 Auto attendance logging to CSV
 - 🌐 Web interface (Flask) for emotion visualization and monitoring
-- 🧠 GPU-accelerated with optional Dlib support for high FPS
+- 🧠 CPU-based real-time processing
 
 ---
 
@@ -21,7 +21,7 @@ This project is an AI-powered attendance system that uses real-time **facial emo
 - Python
 - OpenCV
 - TensorFlow / Keras
-- Dlib (GPU optimized)
+- face-recognition
 - Flask (web server)
 - SQLite (student face database)
 - HTML/CSS/JS (frontend)
@@ -33,38 +33,34 @@ This project is an AI-powered attendance system that uses real-time **facial emo
 ```bash
 emotion-attendance/
 │
-├── emotion.py              # Main emotion detection logic
-├── attendance.py           # Face recognition & attendance logging
+├── emotion.py              # Main application logic
+├── requirements.txt        # Project dependencies
 ├── face_model.h5           # Trained emotion recognition model
 ├── face_recognition.db     # SQLite DB with known faces
 ├── monitordb.py / .ipynb   # Monitor DB entries visually
 ├── templates/              # Flask HTML templates
 ├── static/                 # CSS and JS assets
-├── dlib/                   # Dlib repository for GPU face encoding (submodule)
 ├── *.csv                   # Auto-generated attendance logs
 └── context.md              # Additional context & notes
+```
 
-
--------------------------------------------------------------------
-How to Run:
-1- Clone the repository:
-git clone https://github.com/hisham3323/Emotion-attendance-system.git
-cd Emotion-attendance-system
-2-Install dependencies:
-pip install -r requirements.txt
-3-Run the application:
-python emotion.py
- Make sure your webcam/front facing camera is connected and functional.
---------------------------------------------------------------------
- Dlib GPU Setup (Optional)
-If you want high FPS face recognition:
-
-Use the included dlib folder (GPU-optimized version).
-
-Compile with CUDA support using CMake.
-
-Or install from a prebuilt GPU wheel (available online).
---------------------------------------------------------------------
+---
+## How to Run:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/hisham3323/Emotion-attendance-system.git
+   cd Emotion-attendance-system
+   ```
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Run the application:**
+   ```bash
+   python emotion.py
+   ```
+   > Make sure your webcam/front facing camera is connected and functional.
+---
 #License
 This project is licensed under the APACHE License. See the LICENSE file for details.
 #Contributing
