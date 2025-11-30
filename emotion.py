@@ -112,90 +112,95 @@ def dashboard():
     return render_template("index.html")
 
 
-# --------------- Emotion Detection ----------------
-@app.route("/emotion")
-def emotion_page():
-    return render_template("emotion.html")
-
+# --------------- Emotion & Attendance System ---------------
 @app.route("/predict", methods=["POST"])
 def predict():
-    data_url = request.json["image"]
-    encoded  = data_url.split(",")[1]
-    img      = cv2.imdecode(np.frombuffer(base64.b64decode(encoded), np.uint8),
-                            cv2.IMREAD_COLOR)
+    """Receives an image, performs emotion prediction, and returns the result."""
+    try:
+        data_url = request.json["image"]
+        encoded = data_url.split(",")[1]
+        img = cv2.imdecode(
+            np.frombuffer(base64.b64decode(encoded), np.uint8), cv2.IMREAD_COLOR
+        )
 
-    gray  = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
-    result = "No Face"
-    for (x, y, w, h) in faces:
-        face = cv2.resize(gray[y:y+h, x:x+w], (48, 48))
-        face = img_to_array(face)[None, ...]
-        result = class_names[np.argmax(model.predict(face))]
-        break
+        emotion = "No Face"
+        if len(faces) > 0:
+            (x, y, w, h) = faces[0]
+            face = cv2.resize(gray[y : y + h, x : x + w], (48, 48))
+            face = img_to_array(face)[None, ...]
+            emotion = class_names[np.argmax(model.predict(face))]
 
-    return jsonify({"emotion": result})
+        return jsonify({"emotion": emotion})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
-# --------------- Attendance System ---------------
 def video_frames():
-    """Generator that yields JPEG frames for the /video_feed route."""
+    """Generator that yields JPEG frames for video streaming."""
     global present_users, all_user_names, attendance_saved
     init_camera()
 
     present_users.clear()
-    encodes          = load_users_from_db()
-    all_user_names   = set(encodes.keys())
+    encodes = load_users_from_db()
+    all_user_names = set(encodes.keys())
     attendance_saved = False
 
     frame_id = 0
-    locs     = []
-    matches  = []
-
     while True:
         ret, frame = video_capture.read()
         if not ret:
             break
 
+        # Resize and convert to RGB for face recognition
         rgb_small = cv2.resize(frame, None, fx=SCALE, fy=SCALE)
         rgb_small = cv2.cvtColor(rgb_small, cv2.COLOR_BGR2RGB)
 
+        # Process every Nth frame to save resources
         if frame_id % PROCESS_EVERY_N == 0:
-            # ---- GPU face detection ---------------------------------------
-            locs   = face_recognition.face_locations(rgb_small, model="cnn")
-            encs   = face_recognition.face_encodings(rgb_small, locs)
+            # Detect faces and recognize them
+            locs = face_recognition.face_locations(rgb_small, model="hog")
+            encs = face_recognition.face_encodings(rgb_small, locs)
             matches = []
 
             for enc in encs:
                 name = "Unknown"
-                for user_name, user_enc in encodes.items():
-                    if face_recognition.face_distance([user_enc], enc)[0] < 0.4:
-                        name = user_name
+                # Compare against known faces
+                distances = face_recognition.face_distance(list(encodes.values()), enc)
+                if len(distances) > 0:
+                    best_match_idx = np.argmin(distances)
+                    if distances[best_match_idx] < 0.4:
+                        name = list(encodes.keys())[best_match_idx]
                         present_users.add(name)
-                        break
                 matches.append(name)
-        # ------------------------------------------------------------------
 
-        # draw boxes (scale back up to full frame coords)
-        for (top, right, bottom, left), name in zip(locs, matches):
-            top    = int(top    / SCALE)
-            right  = int(right  / SCALE)
-            bottom = int(bottom / SCALE)
-            left   = int(left   / SCALE)
+            # Draw bounding boxes and names on the original frame
+            for (top, right, bottom, left), name in zip(locs, matches):
+                top, right, bottom, left = (
+                    int(v / SCALE) for v in (top, right, bottom, left)
+                )
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+                cv2.putText(
+                    frame,
+                    name,
+                    (left, top - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 0),
+                    2,
+                )
 
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-            cv2.putText(frame, name, (left, top - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-
+        # Encode frame as JPEG and yield it
         _, buf = cv2.imencode(".jpg", frame)
-        yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" +
-               buf.tobytes() + b"\r\n")
-
+        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + buf.tobytes() + b"\r\n"
         frame_id += 1
 
 
 @app.route("/attendance")
 def attendance_page():
+    """Serves the main attendance monitoring page."""
     return render_template("attendance.html")
 
 @app.route("/video_feed")
